@@ -1,5 +1,7 @@
 const arrayCells = document.querySelectorAll('td');
 const arrayColumns = document.querySelectorAll('tr');
+const inputCurrency = document.querySelector('.entering-currency');
+const arrayCurrencyName = document.querySelectorAll('.currency-name');
 
 const arrayID = [
   {
@@ -106,8 +108,6 @@ async function searchMaxAndMin() {
     }
     strMaxNumber = '' + max;
     strMinNumber = '' + min;
-    console.log(strMaxNumber);
-    console.log(strMinNumber);
     for (let k = 0; k < arrayCells.length; k++) {
       if(arrayCells[k].innerHTML === strMaxNumber) {
         arrayCells[k].style.background = 'green';
@@ -120,3 +120,17 @@ async function searchMaxAndMin() {
 }
 
 addValueInTable();
+
+inputCurrency.addEventListener('keydown', function() {
+  inputCurrency.addEventListener('keyup', function(e) {
+    const arraySymbols = e.target.value.split('');
+    let stringSymbols = arraySymbols.join('');
+    arrayCurrencyName.forEach(element => {
+      if(element.innerHTML.indexOf(stringSymbols) === -1) {
+        element.parentNode.style.display = 'none';
+      } else {
+        element.parentNode.style.display = 'table-row';
+      }
+    })
+  });
+});
