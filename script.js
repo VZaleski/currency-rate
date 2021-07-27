@@ -5,6 +5,7 @@ const inputDate = document.querySelector('.input-date');
 const arrayCurrencyName = document.querySelectorAll('.currency-name');
 const date = new Date();
 
+//id с 8 июля 2021 года по 2050 год
 const arrayID = [
   {
     name: 'eur',
@@ -20,8 +21,25 @@ const arrayID = [
   }
 ];
 
+//id c 1июля 2016 года по 8 июля 2021 года
+const arrayOldId = [
+  {
+    name: 'eur',
+    id: '292'
+  }, 
+  {
+    name: 'usd',
+    id: '145'
+  }, 
+  {
+    name: 'rur',
+    id: '298'
+  }
+];
+
 const data = [];
 
+//функция замены первого и последнего элемента массива между собой
 function changePlace(str) {
   let array = str.split('-');
   let temp = '';
@@ -32,17 +50,19 @@ function changePlace(str) {
   return newStr;
 }
 
+//функция, которая определяет текущий день и указывает этот день как стартовый в календаре
 function currentCalendarDay() {
   const month = date.getMonth() + 1;
   if(month < 10) {
-    inputDate.value = `${date.getFullYear()}-0${date.getMonth()}-${date.getDate()}`;
-    inputDate.max = `${date.getFullYear()}-0${date.getMonth()}-${date.getDate()}`;
+    inputDate.value = `${date.getFullYear()}-0${month}-${date.getDate()}`;
+    inputDate.max = `${date.getFullYear()}-0${month}-${date.getDate()}`;
   } else {
-    inputDate.value = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-    inputDate.max = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    inputDate.value = `${date.getFullYear()}-${month}-${date.getDate()}`;
+    inputDate.max = `${date.getFullYear()}-${month}-${date.getDate()}`;
   }
 }
 
+//функция, которая возвращает массив дней, начиная с дня указанного в календаре
 function today() {
   const dtms =  Date.parse(inputDate.value);
   arrayCells.forEach(element => element.style.background = 'white');
@@ -50,24 +70,33 @@ function today() {
   const arrayDays = [];
   for (let i = 0; i < countDays; i++) {
     let newdate = new Date(dtms - ((24 * 60 * 60 * 1000) * i));
-    let month = newdate.getMonth() + 2;
+    let month = newdate.getMonth() + 1;
     arrayDays[i] = `${newdate.getDate()}-${month}-${newdate.getFullYear()}`;
   }
   return arrayDays;
 }
 
+//функция создания адресов, для получения данных из API
 function createURL() {
   const arrayDays = today();
+  const dateOneJulyNewId = '2021-7-8'; //начало действия новых id валют национального банка( старые с 1 июля 2016 по 8 июля 2021года)
   const startDate = changePlace(arrayDays[arrayDays.length - 1]);
   const endDate = changePlace(arrayDays[0]);
+  const numberDateOneJuly = Date.parse(dateOneJulyNewId);
+  const numberStartDate = Date.parse(startDate);
   const countRate = 3;
   const arrayURL = [];
   for (let i = 0; i < countRate; i++) {
-    arrayURL[i] = `https://www.nbrb.by/api/exrates/rates/dynamics/${arrayID[i].id}?startdate=${startDate}&enddate=${endDate}`;   
+    if( numberDateOneJuly < numberStartDate) {
+      arrayURL[i] = `https://www.nbrb.by/api/exrates/rates/dynamics/${arrayID[i].id}?startdate=${startDate}&enddate=${endDate}`;
+    }else {
+      arrayURL[i] = `https://www.nbrb.by/api/exrates/rates/dynamics/${arrayOldId[i].id}?startdate=${startDate}&enddate=${endDate}`; 
+    }
   }
   return arrayURL;
 }
 
+//функция получения данных из API национального банка
 async function currentRate() {
   const arrayURL = createURL();
   for (let i = 0; i < arrayURL.length; i++) {
@@ -77,14 +106,17 @@ async function currentRate() {
   return data;
 }
 
+//функция добавления дней в ячейки таблицы
 function addDaysInTable() {
-  for (let i = 0; i < 7; i++) {
+  let days = 7;
+  for (let i = 0; i < days; i++) {
     let j = i + 1;
     const arrayDays = today();
     arrayCells[j].innerHTML = arrayDays[i];
   }
 }
 
+//функция добавления значений полученных из API в ячейки таблицы
 async function addValueInTable() {
   addDaysInTable();
   const array = await currentRate();
@@ -92,13 +124,14 @@ async function addValueInTable() {
     const newArray = array[i];
     for (let j = newArray.length - 1; j > -1; j--) {
       let index = 9 + j + 8*i;
-      arrayCells[index].innerHTML = newArray[j].Cur_OfficialRate;
+      arrayCells[index].innerHTML = newArray[newArray.length - j - 1].Cur_OfficialRate;
     }
   }
-  searchMaxAndMin()
+  searchMaxAndMin();
 }
 
-async function searchMaxAndMin() {
+//поиск максимального и минимального значения в каждой строке валюты
+function searchMaxAndMin() {
   const countRows = 3;
   const countColumns = 7;
   let max = 0;
@@ -114,8 +147,9 @@ async function searchMaxAndMin() {
       index = 9 + j + 8*i;
       number = +arrayCells[index].innerHTML;
       if(max < number) {
-        max = number
-      } else if( min > number) {
+        max = number;
+      }
+      if( min > number) {
         min = number;
       }
     }
@@ -135,6 +169,7 @@ async function searchMaxAndMin() {
 currentCalendarDay();
 addValueInTable();
 
+//Поиск подстроки, введеной в input, в строках, содержащие имена валют
 inputCurrency.addEventListener('keydown', function() {
   inputCurrency.addEventListener('keyup', function(e) {
     const arraySymbols = e.target.value.split('');
@@ -149,4 +184,5 @@ inputCurrency.addEventListener('keydown', function() {
   });
 });
 
+//изменение даты в календаре
 inputDate.addEventListener('input',() => addValueInTable());
