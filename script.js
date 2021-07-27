@@ -1,7 +1,9 @@
 const arrayCells = document.querySelectorAll('td');
 const arrayColumns = document.querySelectorAll('tr');
 const inputCurrency = document.querySelector('.entering-currency');
+const inputDate = document.querySelector('.input-date');
 const arrayCurrencyName = document.querySelectorAll('.currency-name');
+const date = new Date();
 
 const arrayID = [
   {
@@ -30,15 +32,26 @@ function changePlace(str) {
   return newStr;
 }
 
+function currentCalendarDay() {
+  const month = date.getMonth() + 1;
+  if(month < 10) {
+    inputDate.value = `${date.getFullYear()}-0${date.getMonth()}-${date.getDate()}`;
+    inputDate.max = `${date.getFullYear()}-0${date.getMonth()}-${date.getDate()}`;
+  } else {
+    inputDate.value = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    inputDate.max = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  }
+}
+
 function today() {
-  const date = new Date();
-  const dtms = date.valueOf();
+  const dtms =  Date.parse(inputDate.value);
+  arrayCells.forEach(element => element.style.background = 'white');
   const countDays = 7;
   const arrayDays = [];
   for (let i = 0; i < countDays; i++) {
     let newdate = new Date(dtms - ((24 * 60 * 60 * 1000) * i));
-    let month = newdate.getMonth() + 1;
-    arrayDays[i] = `${newdate.getDate()}-${month}-${newdate.getFullYear()}`
+    let month = newdate.getMonth() + 2;
+    arrayDays[i] = `${newdate.getDate()}-${month}-${newdate.getFullYear()}`;
   }
   return arrayDays;
 }
@@ -119,6 +132,7 @@ async function searchMaxAndMin() {
   }
 }
 
+currentCalendarDay();
 addValueInTable();
 
 inputCurrency.addEventListener('keydown', function() {
@@ -134,3 +148,5 @@ inputCurrency.addEventListener('keydown', function() {
     })
   });
 });
+
+inputDate.addEventListener('input',() => addValueInTable());
